@@ -47,7 +47,20 @@ def pharseCSVDataToJSON(pathToCSV: str) -> dict:
                 trade["color"] = "yellow"
             else:
                 trade["color"] = "orange" # unknown
-           
+             # check for order Type
+            if trade["orderType"] == "0":
+                trade["orderType"] = "Buy"
+            if trade["orderType"] == "1":
+                trade["orderType"] = "Sell"
+            if trade["orderType"] == "2":
+                trade["orderType"] = "Buy Limit"    
+            if trade["orderType"] == "3":  
+                trade["orderType"] = "Sell Limit"
+            if trade["orderType"] == "4":    
+                trade["orderType"] = "Buy Stop" 
+            if trade["orderType"] == "5":   
+                trade["orderType"] = "Sell Stop"
+		
             jsonData["trades"][f"{row[0]}"] = trade
 
         return jsonData
