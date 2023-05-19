@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trade History</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+        .trade-box {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: auto;
+        }
+
+        .trade-box .trade {
+            flex-basis: calc(50% - 20px);
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            
+        }
+
+        .trade-box .trade .sl-box {
+            background-color: red;
+            width: 20px;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: -15px;
+            border-radius: 5px 0 0 5px;
+            z-index: 1;
+
+        }
+        .trade-box .trade .tp-box {
+            background-color: green;
+            width: 20px;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: -15px;
+            border-radius: 5px 0 0 5px;
+            z-index: 1;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trade History</h1>
+        <form method="post">
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Show Trades</button>
+            </div>
+        </form>
+        {% if trades %}
+        <h2>Trades</h2>
+        <div class="trade-box">
+            {% for trade in trades['trades'] %}
+                <div class="trade trade col-6 col-sm-4 col-md-3" style="padding: 10px; flex-basis: calc(25% - 20px); border-radius: 15px; border: 3px solid {{ trades['trades'][trade]['color'] }}">
+             
+                    {% if trades['trades'][trade]['comment'] == "[sl]" %}
+                        {% if trades['trades'][trade]['color'] == "green"%}
+                            <div class="tp-box"></div>
+                        {% else %}
+                            <div class="sl-box"></div>
+                        {% endif %}
+                    {% elif trades['trades'][trade]['comment'] == "[tp]" %}
+                        <div class="tp-box"></div>
+                    {% endif %}
+
+                    <h4>{{ loop.index }} - ID: {{ trade }}</h4>
+                    <h5 class="profit-loss">Profit/Loss: {{ trades['trades'][trade]['profitloss'] }}</h5>
+                    <br>
+                    <p>Order Type: {{ trades['trades'][trade]['orderType'] }}</p>
+                    <p>Symbol: {{ trades['trades'][trade]['symbol'] }}</p>
+                    <p>Lot Size: {{ trades['trades'][trade]['volume'] }}</p>
+                    <p>Stop Loss: {{ trades['trades'][trade]['sl'] }}</p>
+                    <p>Take Profit: {{ trades['trades'][trade]['tp'] }}</p>
+                    <p>Opened At: {{ trades['trades'][trade]['openedAt'] }}</p>
+                    <p>Closed At: {{ trades['trades'][trade]['closedAt'] }}</p>
+                    <p>Swaps: {{ trades['trades'][trade]['swaps'] }}</p>
+                    <p>Commission/Fees: {{ trades['trades'][trade]['commission'] }}</p>
+                    
+                    {% if trades['trades'][trade]['comment'] == "[sl]" %}
+                        {% if trades['trades'][trade]['color'] == "green"%}
+                                <p>Comment: Take Profit Hit!</p>
+                            {% else %}
+                                <p>Comment: Stopped Out!</p>
+                            {% endif %}
+                        
+                    {% elif trades['trades'][trade]['comment'] == "[tp]"%}
+                        <p>Comment: Take Profit Hit!</p>
+                    {% else %}
+                        <p>Comment: {{ trades['trades'][trade]['comment'] }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% endif %}
+    </div>
+</body>
+
+</html>
