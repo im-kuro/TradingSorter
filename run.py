@@ -3,21 +3,32 @@ import argparse
 import csv
 from jinja2 import Template
 from flask import Flask, render_template, request
+from collections import defaultdict
 
 app = Flask(__name__)
 
 argsToParse = argparse.ArgumentParser(description="Kuros Trading Visualizer - @devkuro - GH: im-kuro")
-
 argsToParse.add_argument("--filepath", "-f", help="the file/path to the csv file", default=False, type=str)
-
 argParsedObj = argsToParse.parse_args()
 
+order_types = {
+    "0": "Buy",
+    "1": "Sell",
+    "2": "Buy Limit",
+    "3": "Sell Limit",
+    "4": "Buy Stop",
+    "5": "Sell Stop"
+}
 
-def pharseCSVDataToJSON(pathToCSV: str) -> dict:
+color_map = {
+    "-": "red",  # loss
+    "$": "green",  # profit
+    "N": "yellow",  # no trade
+}
 
-    jsonData = {
-        "trades": {}
-    }
+
+def parseCSVDataToJSON(pathToCSV: str) -> dict:
+    jsonData = defaultdict(dict)
 
     with open(pathToCSV, "r") as openCSVFile:
         csvreader = csv.reader(openCSVFile)
@@ -25,7 +36,7 @@ def pharseCSVDataToJSON(pathToCSV: str) -> dict:
 
         for row in csvreader:  # extracting each data row one by one
             trade = {
-                "orderType": row[1],
+                "orderType": order_types.get(row[1], ""),
                 "symbol": row[2],
                 "volume": row[3],
                 "sl": row[4],
@@ -36,44 +47,17 @@ def pharseCSVDataToJSON(pathToCSV: str) -> dict:
                 "commission": row[9],
                 "profitloss": row[10],
                 "comment": row[11],
-                "color": ""
+                "color": next((color for color, symbol in color_map.items() if str(row[10]).startswith(symbol)), "orange")
             }
-            # check if its no profit/profit/loss
-            if str(row[10][0]) == "-": # loss
-                trade["color"] = "red"
-            elif str(row[10][0]) == "$": # profit
-                trade["color"] = "green"
-            elif str(row[10][0]) == "N": # no trade
-                trade["color"] = "yellow"
-            else:
-                trade["color"] = "orange" # unknown
-             # check for order Type
-            if trade["orderType"] == "0":
-                trade["orderType"] = "Buy"
-            if trade["orderType"] == "1":
-                trade["orderType"] = "Sell"
-            if trade["orderType"] == "2":
-                trade["orderType"] = "Buy Limit"    
-            if trade["orderType"] == "3":  
-                trade["orderType"] = "Sell Limit"
-            if trade["orderType"] == "4":    
-                trade["orderType"] = "Buy Stop" 
-            if trade["orderType"] == "5":   
-                trade["orderType"] = "Sell Stop"
-		
-            jsonData["trades"][f"{row[0]}"] = trade
+            jsonData["trades"][row[0]] = trade
 
-        return jsonData
-
+    return jsonData
 
 
 @app.route('/', methods=['GET', 'POST'])
 def trade_history():
-    
-    jsonData = pharseCSVDataToJSON(argParsedObj.filepath)
-	
+    jsonData = parseCSVDataToJSON(argParsedObj.filepath)
     return render_template('main.html', trades=jsonData)
-
 
 
 if __name__ == "__main__":
@@ -82,15 +66,4 @@ if __name__ == "__main__":
         print("Error: No file path was given")
         exit(0)
 
-
     app.run()
-
-
-
-
-
-
-
-
-
-
